@@ -1,0 +1,10 @@
+const express=require('express')
+const Users=express.Router()
+const users=require('../controllers/users.controller')
+const verifyToken = require('../jwt/verifyToken')
+Users.post('/all',verifyToken,users.getAll)
+Users.post('/addUser',users.addUser)
+Users.get('/user/:id',users.getUser)
+Users.post('/login',users.getLogin)
+Users.put('/logout',users.getLogout)
+module.exports=Users
