@@ -74,7 +74,7 @@ try{
       bcrypt.compare(password, user[0].password, function(err, result) {
          if(result){
             try{
-               //var token = jwt.sign({ id:user.id }, process.env.SECRET_KEY,{expiresIn: '30s'});
+               var token = jwt.sign({ id:user.id }, process.env.SECRET_KEY,{expiresIn: '30s'});
                res.status(200).send({
                   status:true,
                   user,
