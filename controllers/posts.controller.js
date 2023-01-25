@@ -1,20 +1,39 @@
-const {Post} = require('../config/db');
+const {Post,RelationShip} = require('../config/db');
 module.exports={
     getAllPosts:async(req,res)=>{
+        
+        const {idUser}=req.params
+
         try{
-            const data=await Post.get()
-            const publicaciones=data.docs.map(e=>{return {
+            
+            const data=await RelationShip.get()
+            const myFriends=data.docs.filter(e=>{return e._fieldsProto.idUser.stringValue===idUser})
+            
+            const datos=myFriends.map(e=>{return {
+                idUser:e._fieldsProto.idUser.stringValue,
+                idFollowed:e._fieldsProto.idFollowed.stringValue,
+                idFollow:e._ref._path.segments[1]
+            }})
+            
+            const posts=await Post.get()
+            const publicaciones=posts.docs.map(e=>{return {
                 publicacion:e._fieldsProto.publicacion.stringValue,
+                nombre:e._fieldsProto.name.stringValue,
+                apellido:e._fieldsProto.lastname.stringValue,
                 idUser:e._fieldsProto.idUser.stringValue,
                 idPublicacion:e._ref._path.segments[1]
             }})
+
+const myFriendsPosts= publicaciones.filter(obj1 => datos.some(obj2 => obj1.idUser === obj2.idFollowed));
+            const myPosts=publicaciones.filter(e=>{return e.idUser===idUser})
             res.status(200).json({
                 status:true,
                 message:"Publicaciones recuperadas exitosamente",
-                publicaciones
-            })
+                publicacionesAmigos:myFriendsPosts,
+                misPublicaciones:myPosts
+            }) 
         }
-        catch(e){
+        catch(e){ 
             console.log(e)
             res.status(400).json({
                 status:false,
@@ -23,12 +42,14 @@ module.exports={
         }
     },
     addPosts: async(req,res) => {
-        const {id}=req.params
+        const {name,lastname,idUser}=req.params
         const {publicacion}=req.body
         try{
             await Post.add({
-                idUser: id,
-                publicacion
+                name,
+                lastname,
+                publicacion,
+                idUser
             })
             res.status(200).json({
                 status:true,

@@ -6,5 +6,5 @@ Users.post('/all',verifyToken,users.getAll)
 Users.post('/addUser',users.addUser)
 Users.get('/user/:id',users.getUser)
 Users.post('/login',users.getLogin)
-Users.put('/logout',users.getLogout)
-module.exports=Users
+Users.put('/logout',users.getLogout) 
+module.exports=Users 

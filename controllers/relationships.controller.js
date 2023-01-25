@@ -1,16 +1,33 @@
 const {RelationShip} = require('../config/db');
+const {User} = require('../config/db');
 module.exports={
     allFollows:async(req,res)=>{
-        
+        const {idUser}=req.params
+        const {idFollowed}=req.params
         try{
+            //GET USERS
+            const users=await User.get()
+      const response=await users.docs.map(e=>{return {
+         name:e._fieldsProto.name.stringValue,
+         lastname:e._fieldsProto.lastname.stringValue,
+         mail:e._fieldsProto.mail.stringValue,
+         id:e._ref._path.segments[1]
+      }})
+
             const data=await RelationShip.get()
             
-            const datos=data.docs.map(e=>{return {
+            const datosId=data.docs.map(e=>{return {
                 idUser:e._fieldsProto.idUser.stringValue,
                 idFollowed:e._fieldsProto.idFollowed.stringValue,
                 idFollow:e._ref._path.segments[1]
             }})
-            res.status(200).json({
+            const datos=response.filter(obj1 => datosId.some(obj2 => obj1.id === obj2.idFollowed));
+
+            for(let i=0; i<datos.length; i++){
+                datos[i].idFollow = datosId[i].idFollow
+            }
+            
+            res.status(200).json({ 
                 status:true,
                 message:"Seguidores conseguidos exitosamente",
                 datos

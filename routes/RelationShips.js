@@ -4,5 +4,5 @@ const relationShips=require('../controllers/relationships.controller')
 const verifyToken = require('../jwt/verifyToken')
 RelationShips.post('/addFollow/:idUser/:idFollowed',relationShips.addFollow)
 RelationShips.delete('/deleteFollow/:idFollow',relationShips.deleteFollow)
-RelationShips.get('/allFollows',relationShips.allFollows)
+RelationShips.get('/allFollows/:idUser',relationShips.allFollows)
 module.exports=RelationShips

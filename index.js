@@ -17,4 +17,4 @@ app.listen(PORT,()=>{
 })
 app.use("/users",Users) 
 app.use("/posts",Posts) 
-app.use("/relationships",RelationShips)
+app.use("/relationships",RelationShips) 

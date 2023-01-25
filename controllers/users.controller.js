@@ -1,5 +1,5 @@
 var jwt = require('jsonwebtoken');
-const User = require('../config/db');
+const {User,Post} = require('../config/db');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 module.exports={
@@ -17,18 +17,53 @@ module.exports={
       })
     },
     getUser:async(req, res) =>{
-        const data=await User.doc("vuXrg8qfehSBCmvsfIY8").update({name:"el sexpotae"})
-        res.send(data)
+        //const data=await User.doc("vuXrg8qfehSBCmvsfIY8").update({name:"el sexpotae"})
+        const {id}=req.params
+try{
+        //Data basica
+        const data=await User.get()
+      const response=await data.docs.map(e=>{return {
+         name:e._fieldsProto.name.stringValue,
+         lastname:e._fieldsProto.lastname.stringValue,
+         mail:e._fieldsProto.mail.stringValue,
+         id:e._ref._path.segments[1]
+      }})
+      const dataBasica=response.filter(e=>{return e.id===id})
+
+      //Post del usuario seleccionado
+      const posts=await Post.get()
+      const publicaciones=posts.docs.map(e=>{return {
+         publicacion:e._fieldsProto.publicacion.stringValue,
+         nombre:e._fieldsProto.name.stringValue,
+         apellido:e._fieldsProto.lastname.stringValue,
+         idUser:e._fieldsProto.idUser.stringValue,
+         idPublicacion:e._ref._path.segments[1]
+     }})
+     const publicacionesUser=publicaciones.filter(e=>{return e.idUser===id})
+     res.status(200).json({
+      status:true,
+      message:"Informacion recuperada exitosamente",
+      dataBasica,
+      publicacionesUser
+     })}
+     catch(e){
+      res.status(400).json({
+         status:false,
+         message:"No se ha podido acceder al perfil"
+      })
+     }
+
+     
     },
     getLogin:async (req, res) =>{
       const {mail,password}=req.body
-      const data=await User.get()
+      const data=await User.get() 
       const response=await data.docs.map(e=>{return {
          name:e._fieldsProto.name.stringValue,
          lastname:e._fieldsProto.lastname.stringValue,
          mail:e._fieldsProto.mail.stringValue,
          password:e._fieldsProto.password.stringValue,
-         id:e._ref._path.segments[1]
+         id:e._ref._path.segments[1] 
       }})
       const userExist=response.some(user=>user.mail===mail)
       if(!userExist) return res.status(400).json({
