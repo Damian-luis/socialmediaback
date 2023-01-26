@@ -71,6 +71,7 @@ try{
          message:"No existe un usuario registrado con ese correo electrónico"
       })
       const user=response.filter(e=>{return e.mail===mail})
+      
       bcrypt.compare(password, user[0].password, function(err, result) {
          if(result){
             try{

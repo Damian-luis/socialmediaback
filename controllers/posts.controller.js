@@ -44,6 +44,7 @@ const myFriendsPosts= publicaciones.filter(obj1 => datos.some(obj2 => obj1.idUse
     addPosts: async(req,res) => {
         const {name,lastname,idUser}=req.params
         const {publicacion}=req.body
+        console.log(name+lastname+idUser+publicacion)
         try{
             await Post.add({
                 name,
