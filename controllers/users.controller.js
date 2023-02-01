@@ -2,6 +2,7 @@ var jwt = require('jsonwebtoken');
 const {User,Post} = require('../config/db');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
+let today = new Date();
 module.exports={
     getAll:async(req, res) =>{
       const data=await User.get()
@@ -62,6 +63,8 @@ try{
          name:e._fieldsProto.name.stringValue,
          lastname:e._fieldsProto.lastname.stringValue,
          mail:e._fieldsProto.mail.stringValue,
+         date:e._fieldsProto.date.stringValue,
+         time:e._fieldsProto.time.stringValue,
          password:e._fieldsProto.password.stringValue,
          id:e._ref._path.segments[1] 
       }})
@@ -118,6 +121,8 @@ try{
          mail:e._fieldsProto.mail.stringValue,
          id:e._ref._path.segments[1]
       }})
+      let date = today.toLocaleDateString()
+let time = today.toLocaleTimeString() 
       const userExist=response.some(user=>user.mail===mail)
       if(userExist) return res.status(400).json({
          status:false,
@@ -130,7 +135,7 @@ try{
                message:"Error al crear el usuario"
             })
             User.add({
-               name,lastname,mail,password:hash
+               name,lastname,mail,password:hash,date,time
             })
             res.status(200).json({
                status:true,

@@ -1,5 +1,6 @@
 const {RelationShip} = require('../config/db');
 const {User} = require('../config/db');
+let today = new Date();
 module.exports={
     allFollows:async(req,res)=>{
         const {idUser}=req.params
@@ -11,6 +12,8 @@ module.exports={
          name:e._fieldsProto.name.stringValue,
          lastname:e._fieldsProto.lastname.stringValue,
          mail:e._fieldsProto.mail.stringValue,
+         date:e._fieldsProto.date.stringValue,
+         time:e._fieldsProto.time.stringValue,
          id:e._ref._path.segments[1]
       }})
 
@@ -19,6 +22,8 @@ module.exports={
             const datosId=data.docs.map(e=>{return {
                 idUser:e._fieldsProto.idUser.stringValue,
                 idFollowed:e._fieldsProto.idFollowed.stringValue,
+                date:e._fieldsProto.date.stringValue,
+                time:e._fieldsProto.time.stringValue,
                 idFollow:e._ref._path.segments[1]
             }})
             const datos=response.filter(obj1 => datosId.some(obj2 => obj1.id === obj2.idFollowed));
@@ -45,11 +50,14 @@ module.exports={
     addFollow: async(req,res) => {
         const {idUser}=req.params
         const {idFollowed}=req.params
-        
+        let date = today.toLocaleDateString()
+let time = today.toLocaleTimeString() 
         try{
             await RelationShip.add({
                 idUser: idUser,
-                idFollowed
+                idFollowed,
+                date,
+                time
             })
             res.status(200).json({
                 status:true,

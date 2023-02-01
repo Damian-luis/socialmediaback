@@ -1,4 +1,5 @@
 const {Post,RelationShip} = require('../config/db');
+let today = new Date();
 module.exports={
     getAllPosts:async(req,res)=>{
         
@@ -12,6 +13,8 @@ module.exports={
             const datos=myFriends.map(e=>{return {
                 idUser:e._fieldsProto.idUser.stringValue,
                 idFollowed:e._fieldsProto.idFollowed.stringValue,
+                date:e._fieldsProto.date.stringValue,
+                time:e._fieldsProto.time.stringValue,
                 idFollow:e._ref._path.segments[1]
             }})
             
@@ -21,16 +24,19 @@ module.exports={
                 nombre:e._fieldsProto.name.stringValue,
                 apellido:e._fieldsProto.lastname.stringValue,
                 idUser:e._fieldsProto.idUser.stringValue,
+                date:e._fieldsProto.date.stringValue,
+                time:e._fieldsProto.time.stringValue,
                 idPublicacion:e._ref._path.segments[1]
             }})
 
+            
 const myFriendsPosts= publicaciones.filter(obj1 => datos.some(obj2 => obj1.idUser === obj2.idFollowed));
             const myPosts=publicaciones.filter(e=>{return e.idUser===idUser})
             res.status(200).json({
                 status:true,
                 message:"Publicaciones recuperadas exitosamente",
                 publicacionesAmigos:myFriendsPosts,
-                misPublicaciones:myPosts
+                misPublicaciones:myPosts,
             }) 
         }
         catch(e){ 
@@ -45,12 +51,18 @@ const myFriendsPosts= publicaciones.filter(obj1 => datos.some(obj2 => obj1.idUse
         const {name,lastname,idUser}=req.params
         const {publicacion}=req.body
         console.log(name+lastname+idUser+publicacion)
+        
+
+let date = today.toLocaleDateString()
+let time = today.toLocaleTimeString() 
         try{
             await Post.add({
                 name,
                 lastname,
                 publicacion,
-                idUser
+                idUser,
+                date,
+                time
             })
             res.status(200).json({
                 status:true,
@@ -91,10 +103,12 @@ const myFriendsPosts= publicaciones.filter(obj1 => datos.some(obj2 => obj1.idUse
     deletePosts:async (req,res) => {
         const {idUser}=req.params
         const {idPublicacion}=req.params
+        console.log("user"+idUser)
+        console.log(idPublicacion)
         try{
             await Post.doc(idPublicacion).delete()
-            res.status(400).json({
-                status:false,
+            res.status(200).json({
+                status:true,
                 message:"Su publicación se ha eliminado exitosamente"
             })
         }
