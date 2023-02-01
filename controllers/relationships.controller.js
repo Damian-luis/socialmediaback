@@ -6,36 +6,35 @@ module.exports={
         const {idUser}=req.params
         const {idFollowed}=req.params
         try{
-            //GET USERS
-            const users=await User.get()
-      const response=await users.docs.map(e=>{return {
-         name:e._fieldsProto.name.stringValue,
-         lastname:e._fieldsProto.lastname.stringValue,
-         mail:e._fieldsProto.mail.stringValue,
-         date:e._fieldsProto.date.stringValue,
-         time:e._fieldsProto.time.stringValue,
-         id:e._ref._path.segments[1]
-      }})
-
-            const data=await RelationShip.get()
+            const data=await User.get()
+            const response=await data.docs.map(e=>{return {
+               name:e._fieldsProto.name.stringValue,
+               lastname:e._fieldsProto.lastname.stringValue,
+               mail:e._fieldsProto.mail.stringValue,
+               id:e._ref._path.segments[1]
+            }})
+const noFriends=response.filter(e=>{return e.id!==idUser})
+console.log(noFriends)
+            const relacionesData=await RelationShip.get()
             
-            const datosId=data.docs.map(e=>{return {
+            const relaciones=relacionesData.docs.map(e=>{return {
                 idUser:e._fieldsProto.idUser.stringValue,
                 idFollowed:e._fieldsProto.idFollowed.stringValue,
+                name:e._fieldsProto.name.stringValue,
+                lastname:e._fieldsProto.lastname.stringValue,
+                mail:e._fieldsProto.mail.stringValue,
                 date:e._fieldsProto.date.stringValue,
                 time:e._fieldsProto.time.stringValue,
                 idFollow:e._ref._path.segments[1]
             }})
-            const datos=response.filter(obj1 => datosId.some(obj2 => obj1.id === obj2.idFollowed));
-
-            for(let i=0; i<datos.length; i++){
-                datos[i].idFollow = datosId[i].idFollow
-            }
-            
+            //const datos=response.filter(obj1 => datosId.some(obj2 => obj1.id === obj2.idFollowed));
+            const friends=relaciones.filter(e=>{return e.idUser===idUser})
+            //const noFriends=relaciones.filter(e=>{return e.idUser!==idUser})
             res.status(200).json({ 
                 status:true,
                 message:"Seguidores conseguidos exitosamente",
-                datos
+                friends,
+                noFriends
             })
         }
         catch(e){
@@ -48,14 +47,16 @@ module.exports={
         
     },
     addFollow: async(req,res) => {
-        const {idUser}=req.params
-        const {idFollowed}=req.params
+        const {idUser,idFollowed,name,lastname,mail}=req.params
         let date = today.toLocaleDateString()
 let time = today.toLocaleTimeString() 
         try{
             await RelationShip.add({
-                idUser: idUser,
+                idUser,
                 idFollowed,
+                name,
+                lastname,
+                mail,
                 date,
                 time
             })
