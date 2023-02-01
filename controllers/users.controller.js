@@ -79,7 +79,7 @@ try{
          
          if(result){
             try{
-               var token = jwt.sign({ id:user.id }, process.env.SECRET_KEY,{expiresIn: '30s'});
+              // var token = jwt.sign({ id:user.id }, process.env.SECRET_KEY,{expiresIn: '30s'});
                res.status(200).send({
                   status:true,
                   user,
@@ -91,8 +91,8 @@ try{
                res.status(400).json({
                   status:false,
                   message:error,
-                  contraseñaInput:password,
-                  contraseñaDb:user[0].password
+                  bueno:result,
+                  malo:err
                })
             }
          }
