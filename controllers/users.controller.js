@@ -40,6 +40,8 @@ try{
          nombre:e._fieldsProto.name.stringValue,
          apellido:e._fieldsProto.lastname.stringValue,
          idUser:e._fieldsProto.idUser.stringValue,
+         date:e._fieldsProto.date.stringValue,
+         time:e._fieldsProto.time.stringValue,
          idPublicacion:e._ref._path.segments[1]
      }})
      const publicacionesUser=publicaciones.filter(e=>{return e.idUser===id})
