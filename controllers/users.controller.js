@@ -27,6 +27,8 @@ try{
          name:e._fieldsProto.name.stringValue,
          lastname:e._fieldsProto.lastname.stringValue,
          mail:e._fieldsProto.mail.stringValue,
+         date:e._fieldsProto.date.stringValue,
+         time:e._fieldsProto.time.stringValue,
          id:e._ref._path.segments[1]
       }})
       const dataBasica=response.filter(e=>{return e.id===id})
