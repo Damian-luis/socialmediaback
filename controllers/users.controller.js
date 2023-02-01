@@ -76,19 +76,23 @@ try{
       const user=response.filter(e=>{return e.mail===mail})
       
       bcrypt.compare(password, user[0].password, function(err, result) {
+         
          if(result){
             try{
                var token = jwt.sign({ id:user.id }, process.env.SECRET_KEY,{expiresIn: '30s'});
                res.status(200).send({
                   status:true,
                   user,
-                  //token
+                  //tokenp
+                  
                })
             }
             catch(error){
                res.status(400).json({
                   status:false,
-                  message:"no se pudo generar token"
+                  message:error,
+                  contraseñaInput:password,
+                  contraseñaDb:user[0].password
                })
             }
          }
