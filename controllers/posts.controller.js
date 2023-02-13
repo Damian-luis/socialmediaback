@@ -62,7 +62,8 @@ let time = today.toLocaleTimeString()
                 publicacion,
                 idUser,
                 date,
-                time
+                time,
+                usersLinked:[]
             })
             res.status(200).json({
                 status:true,

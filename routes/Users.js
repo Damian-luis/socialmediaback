@@ -7,4 +7,5 @@ Users.post('/addUser',users.addUser)
 Users.get('/user/:id',users.getUser)
 Users.post('/login',users.getLogin)
 Users.put('/logout',users.getLogout) 
+Users.put('/test/:id',users.test)
 module.exports=Users 

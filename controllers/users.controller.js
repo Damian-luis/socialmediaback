@@ -1,6 +1,9 @@
 var jwt = require('jsonwebtoken');
 const {User,Post} = require('../config/db');
 const bcrypt = require('bcrypt');
+const { use } = require('../routes/RelationShips');
+const deleteField= require ("firebase/firestore");
+const admin = require('firebase-admin');
 const saltRounds = 10;
 let today = new Date();
 module.exports={
@@ -158,6 +161,36 @@ let time = today.toLocaleTimeString()
          })
       }
       
-    } 
+    } ,
+
+
+
+
+    test:async(req,res) =>{
+const id=req.params.id
+//const user=User.doc(id).update({sexo:admin.firestore.FieldValue.delete()})
+
+//await User.doc(id).update({name:"hola"})
+
+   const data=await User.get()
+const response=await data.docs.map(e=>{return {
+   name:e._fieldsProto.name.stringValue,
+   lastname:e._fieldsProto.lastname.stringValue,
+   mail:e._fieldsProto.mail.stringValue,
+   date:e._fieldsProto.date.stringValue,
+   time:e._fieldsProto.time.stringValue,
+   id:e._ref._path.segments[1]
+    }})
+   
+
+
+let dataBasica=response.filter(e=>{return e.id===id})
+dataBasica[0].mail=[dataBasica[0].mail,"newmail@gmial.com"]
+
+//TESTEANDO ELIMINAR REACCION
+await User.doc(id).update({name:"holssa"})
+res.send(dataBasica)
+
+    }
 }
-//User.add({data}),User.get() data.docs.data,User.doc(id).update() the same with delete()
+//User.add({data}),User.get() data.docs,User.doc(id).update() the same with delete()
