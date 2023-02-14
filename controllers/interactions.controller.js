@@ -20,7 +20,8 @@ module.exports={
                 usersLinked:e._fieldsProto.usersLinked.arrayValue.values.map(e=>{return {
                     name:e.mapValue.fields.name.stringValue,
                     lastname:e.mapValue.fields.lastname.stringValue,
-                    idLike:e.mapValue.fields.idLike.stringValue
+                    idLike:e.mapValue.fields.idLike.stringValue,
+                    idUserLiked
                 }}),
                 idPublicacion:e._ref._path.segments[1]
             }})
@@ -39,7 +40,7 @@ module.exports={
             })
           }
           else{
-            newReact.push({name:name,lastname:lastname,idLike:idUserLiked})
+            newReact.push({name:name,lastname:lastname,idLike:idUserLiked,idUser:idUserLiked})
            await Post.doc(idPublicacion).update({usersLinked:newReact})
             res.status(200).json({ 
                 status:true,
@@ -62,14 +63,16 @@ module.exports={
         
     },
     postComment: async(req,res) => {
-        const {idUser,idPublicacion,name,lastname}=req.params
+        const {idFriend,idPublicacion,name,lastname}=req.params
+        
         const comment=req.body.comment
+        console.log(comment) 
         let date = today.toLocaleDateString()
 let time = today.toLocaleTimeString() 
 
         try{
             const posts=await Post.get()
-           const data=posts.docs
+           
             
             const publicaciones=posts.docs.map(e=>{return {
                 publicacion:e._fieldsProto.publicacion.stringValue,
@@ -84,17 +87,19 @@ let time = today.toLocaleTimeString()
                     time:e.mapValue.fields.time.stringValue,
                     date:e.mapValue.fields.date.stringValue,
                     comment:e.mapValue.fields.comment.stringValue,
-                    idComment:e.mapValue.fields.idComment.stringValue
+                    idComment:e.mapValue.fields.idComment.stringValue,
+                    idUser:e.mapValue.fields.idUser.stringValue
                 }}),
                 usersLinked:e._fieldsProto.usersLinked.arrayValue.values.map(e=>{return {
                     name:e.mapValue.fields.name.stringValue,
                     lastname:e.mapValue.fields.lastname.stringValue,
-                    idLike:e.mapValue.fields.idLike.stringValue
+                    idLike:e.mapValue.fields.idLike.stringValue,
+                    idUser:e.mapValue.fields.idUser.stringValue
                 }}),
                 
                 idPublicacion:e._ref._path.segments[1]
             }})
-             
+           
             let publicacion=publicaciones.filter(e=>{return e.idPublicacion===idPublicacion})
             
             let newComment=publicacion[0].usersComments
@@ -104,6 +109,7 @@ let time = today.toLocaleTimeString()
                 comment,
                 date,
                 time,
+                idUser:idFriend,
                 idComment:uuidv4()
             })
             

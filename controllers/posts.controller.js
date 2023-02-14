@@ -26,11 +26,39 @@ module.exports={
                 idUser:e._fieldsProto.idUser.stringValue,
                 date:e._fieldsProto.date.stringValue,
                 time:e._fieldsProto.time.stringValue,
+                usersComments:e._fieldsProto.usersComments.arrayValue.values.map(e=>{return {
+                    name:e.mapValue.fields.name.stringValue,
+                    lastname:e.mapValue.fields.lastname.stringValue,
+                    time:e.mapValue.fields.time.stringValue,
+                    date:e.mapValue.fields.date.stringValue,
+                    comment:e.mapValue.fields.comment.stringValue,
+                    idComment:e.mapValue.fields.idComment.stringValue,
+                    idUser:e.mapValue.fields.idUser.stringValue
+                }}),
+                usersLinked:e._fieldsProto.usersLinked.arrayValue.values.map(e=>{return {
+                    name:e.mapValue.fields.name.stringValue,
+                    lastname:e.mapValue.fields.lastname.stringValue,
+                    idLike:e.mapValue.fields.idLike.stringValue,
+                    idUser:e.mapValue.fields.idUser.stringValue
+                }}),
                 idPublicacion:e._ref._path.segments[1]
             }})
 
             
-const myFriendsPosts= publicaciones.filter(obj1 => datos.some(obj2 => obj1.idUser === obj2.idFollowed));
+            let myFriendsPosts= publicaciones.filter(obj1 => datos.some(obj2 => obj1.idUser === obj2.idFollowed));
+            
+            for(let i = 0; i < myFriendsPosts.length; i++){
+               
+                for(let j = 0; j < myFriendsPosts[i].usersLinked.length; j++){
+                    
+                    if(myFriendsPosts[i].usersLinked[j].idUser===idUser){
+                        
+                        myFriendsPosts[i].like=true;
+                        
+                    }
+                    
+                } 
+            }
             const myPosts=publicaciones.filter(e=>{return e.idUser===idUser})
             res.status(200).json({
                 status:true,
