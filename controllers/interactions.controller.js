@@ -21,13 +21,13 @@ module.exports={
                     name:e.mapValue.fields.name.stringValue,
                     lastname:e.mapValue.fields.lastname.stringValue,
                     idLike:e.mapValue.fields.idLike.stringValue,
-                    idUserLiked
+                    idUser:e.mapValue.fields.idUser.stringValue
                 }}),
                 idPublicacion:e._ref._path.segments[1]
             }})
             let publicacion=publicaciones.filter(e=>{return e.idPublicacion===idPublicacion})
             let newReact=publicacion[0].usersLinked
-            
+             
             const reactExist=newReact.find(e=>{return e.idLike===idUserLiked})
             
           if(reactExist){

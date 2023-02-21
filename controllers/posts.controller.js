@@ -91,7 +91,8 @@ let time = today.toLocaleTimeString()
                 idUser,
                 date,
                 time,
-                usersLinked:[]
+                usersLinked:[],
+                usersComments:[]
             })
             res.status(200).json({
                 status:true,

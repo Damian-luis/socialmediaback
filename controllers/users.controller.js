@@ -113,6 +113,77 @@ try{
       
        
     },
+    getUserData:async (req, res) =>{
+      const {id}=req.params
+
+      try{
+         const data=await User.get()
+      const response=await data.docs.map(e=>{return {
+         name:e._fieldsProto.name.stringValue,
+         lastname:e._fieldsProto.lastname.stringValue,
+         mail:e._fieldsProto.mail.stringValue,
+         date:e._fieldsProto.date.stringValue,
+         time:e._fieldsProto.time.stringValue,
+         country:e._fieldsProto.country.stringValue,
+         liveCountry:e._fieldsProto.liveCountry.stringValue,
+         ocupation:e._fieldsProto.ocupation.stringValue,
+         birthday:e._fieldsProto.birthday.stringValue,
+         id:e._ref._path.segments[1]
+      }})
+      const dataBasica=response.filter(e=>{return e.id===id})
+ 
+      //Post del usuario seleccionado
+      const posts=await Post.get()
+      
+            const publicaciones=posts.docs.map(e=>{return {
+                publicacion:e._fieldsProto.publicacion.stringValue,
+                nombre:e._fieldsProto.name.stringValue,
+                apellido:e._fieldsProto.lastname.stringValue,
+                idUser:e._fieldsProto.idUser.stringValue,
+                date:e._fieldsProto.date.stringValue,
+                time:e._fieldsProto.time.stringValue,
+                usersComments:e._fieldsProto.usersComments.arrayValue.values.map(e=>{return {
+                    name:e.mapValue.fields.name.stringValue,
+                    lastname:e.mapValue.fields.lastname.stringValue,
+                    time:e.mapValue.fields.time.stringValue,
+                    date:e.mapValue.fields.date.stringValue,
+                    comment:e.mapValue.fields.comment.stringValue,
+                    idComment:e.mapValue.fields.idComment.stringValue,
+                    idUser:e.mapValue.fields.idUser.stringValue
+                }}),
+                usersLinked:e._fieldsProto.usersLinked.arrayValue.values.map(e=>{return {
+                    name:e.mapValue.fields.name.stringValue,
+                    lastname:e.mapValue.fields.lastname.stringValue,
+                    idLike:e.mapValue.fields.idLike.stringValue,
+                    idUser:e.mapValue.fields.idUser.stringValue
+                }}),
+                idPublicacion:e._ref._path.segments[1]
+            }})
+
+        
+            
+        
+         const misPublicaciones=publicaciones.filter(e=>{return e.idUser===id})
+         console.log(misPublicaciones)
+         res.status(200).json({
+            status:true,
+            message:"Informacion recuperada exitosamente",
+            user:dataBasica,
+            post:misPublicaciones
+         })
+      }
+      catch(e){
+         console.log(e)
+         res.status(400).json({
+            status:false,
+            message:"No se ha podido recuperar la informacion del usuario"
+         })
+      }
+      
+      
+      
+       
+    },
     getLogout:(req, res) =>{
         const authHeader = req.headers["authorization"];
    jwt.sign(authHeader, "", { expiresIn: '1s' } , (logout, err) => {
@@ -124,7 +195,7 @@ try{
    });
     },
     addUser: async(req, res) => {
-      const {name,lastname,mail,password}=req.body
+      const {name,lastname,mail,password,country,liveCountry,birthday,ocupation}=req.body
       const data=await User.get()
       const response=await data.docs.map(e=>{return {
          name:e._fieldsProto.name.stringValue,
@@ -146,7 +217,7 @@ let time = today.toLocaleTimeString()
                message:"Error al crear el usuario"
             })
             User.add({
-               name,lastname,mail,password:hash,date,time
+               name,lastname,mail,password:hash,date,time,country,liveCountry,birthday,ocupation
             })
             res.status(200).json({
                status:true,
