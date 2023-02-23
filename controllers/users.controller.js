@@ -164,7 +164,7 @@ try{
             
         
          const misPublicaciones=publicaciones.filter(e=>{return e.idUser===id})
-         console.log(misPublicaciones)
+         
          res.status(200).json({
             status:true,
             message:"Informacion recuperada exitosamente",
@@ -262,6 +262,40 @@ dataBasica[0].mail=[dataBasica[0].mail,"newmail@gmial.com"]
 await User.doc(id).update({name:"holssa"})
 res.send(dataBasica)
 
-    }
+    },
+updateUserData:async(req,res) => {
+   const id=req.params.id
+   const edit=req.body
+   console.log(edit)
+   try{
+      const data=await User.get()
+const response=await data.docs.map(e=>{return {
+   name:e._fieldsProto.name.stringValue,
+   lastname:e._fieldsProto.lastname.stringValue,
+   mail:e._fieldsProto.mail.stringValue,
+   date:e._fieldsProto.date.stringValue,
+   time:e._fieldsProto.time.stringValue,
+   id:e._ref._path.segments[1]
+    }})
+   
+
+
+let dataBasica=response.filter(e=>{return e.id===id})
+//dataBasica[0].mail=[dataBasica[0].mail,"newmail@gmial.com"]
+
+
+await User.doc(id).update(edit)
+res.status(200).json({
+   status:true,
+   message:"Su informacion se ha actualizado correctamente"
+})
+   }
+   catch(e){
+      res.status(404).json({
+         status:false,
+         message:"No se ha podido actualizar la informacion de su perfil"
+      })
+   }
+}
 }
 //User.add({data}),User.get() data.docs,User.doc(id).update() the same with delete()

@@ -9,4 +9,5 @@ Users.post('/login',users.getLogin)
 Users.put('/logout',users.getLogout) 
 Users.put('/test/:id',users.test)
 Users.get('/getUserData/:id',users.getUserData)
+Users.put('/updateUser/:id',users.updateUserData)
 module.exports=Users 
