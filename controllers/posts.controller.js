@@ -1,4 +1,4 @@
-const {Post,RelationShip} = require('../config/db');
+const {Post,RelationShip,User} = require('../config/db');
 let today = new Date();
 module.exports={
     getAllPosts:async(req,res)=>{
@@ -6,6 +6,19 @@ module.exports={
         const {idUser}=req.params
 
         try{
+            
+            
+            const user=await User.get().then(e=>{return e.docs})
+            const usersData=user.map(e=>{return{
+                name:e._fieldsProto.name.stringValue,
+                lastname:e._fieldsProto.lastname.stringValue,
+                mail:e._fieldsProto.mail.stringValue,
+                date:e._fieldsProto.date.stringValue,
+                time:e._fieldsProto.time.stringValue, 
+                password:e._fieldsProto.password.stringValue,
+                urlProfile:e._fieldsProto.urlProfile.stringValue,
+                id:e._ref._path.segments[1] 
+            }})
             
             const data=await RelationShip.get()
             const myFriends=data.docs.filter(e=>{return e._fieldsProto.idUser.stringValue===idUser})
@@ -17,6 +30,8 @@ module.exports={
                 time:e._fieldsProto.time.stringValue,
                 idFollow:e._ref._path.segments[1]
             }})
+            const idFriends=datos.map(e =>{return e.idFollowed})
+            
             
             const posts=await Post.get()
             const publicaciones=posts.docs.map(e=>{return {
@@ -59,12 +74,33 @@ module.exports={
                     
                 } 
             }
+            let example=usersData.filter(e=>{ return idFriends.includes(e.id)})
+            let publicacionesAmigos=example.map((user)=>({
+                ...user,
+                post:myFriendsPosts.filter(post=>post.idUser===user.id)
+                
+            }))
+            for (let i = 0; i < publicacionesAmigos.length; i++) {
+                let urlProfile=publicacionesAmigos[i].urlProfile
+                
+                const postsLength=publicacionesAmigos[i].post.length
+                
+                for (let j = 0; j < postsLength; j++) {
+                    publicacionesAmigos[i].post[j].urlProfile=urlProfile
+                    
+                } 
+              }
+           
             const myPosts=publicaciones.filter(e=>{return e.idUser===idUser})
+            
+            const allPosts = publicacionesAmigos.flatMap(user => user.post);
+            console.log(allPosts)
             res.status(200).json({
                 status:true,
                 message:"Publicaciones recuperadas exitosamente",
-                publicacionesAmigos:myFriendsPosts,
                 misPublicaciones:myPosts,
+                publicacionesAmigos:allPosts
+                
             }) 
         }
         catch(e){ 

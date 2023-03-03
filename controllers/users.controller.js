@@ -6,6 +6,13 @@ const deleteField= require ("firebase/firestore");
 const admin = require('firebase-admin');
 const saltRounds = 10;
 let today = new Date();
+const AWS=require('aws-sdk')
+const s3=new AWS.S3({
+  region:"us-east-2",
+  accessKeyId:"AKIA35DBCFOSMW75LP7L",
+  secretAccessKey:"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"
+})
+const fs=require('fs')
 module.exports={
     getAll:async(req, res) =>{
       const data=await User.get()
@@ -32,9 +39,10 @@ try{
          mail:e._fieldsProto.mail.stringValue,
          date:e._fieldsProto.date.stringValue,
          time:e._fieldsProto.time.stringValue,
+         urlProfile:e._fieldsProto.urlProfile.stringValue,
          id:e._ref._path.segments[1]
       }})
-      const dataBasica=response.filter(e=>{return e.id===id})
+      const dataBasica=response.filter(e=>{return e.id===id}) 
 
       //Post del usuario seleccionado
       const posts=await Post.get()
@@ -71,8 +79,9 @@ try{
          lastname:e._fieldsProto.lastname.stringValue,
          mail:e._fieldsProto.mail.stringValue,
          date:e._fieldsProto.date.stringValue,
-         time:e._fieldsProto.time.stringValue,
+         time:e._fieldsProto.time.stringValue, 
          password:e._fieldsProto.password.stringValue,
+         urlProfile:e._fieldsProto.urlProfile.stringValue,
          id:e._ref._path.segments[1] 
       }})
       const userExist=response.some(user=>user.mail===mail)
@@ -128,6 +137,7 @@ try{
          liveCountry:e._fieldsProto.liveCountry.stringValue,
          ocupation:e._fieldsProto.ocupation.stringValue,
          birthday:e._fieldsProto.birthday.stringValue,
+         urlProfile:e._fieldsProto.urlProfile.stringValue,
          id:e._ref._path.segments[1]
       }})
       const dataBasica=response.filter(e=>{return e.id===id})
@@ -217,7 +227,7 @@ let time = today.toLocaleTimeString()
                message:"Error al crear el usuario"
             })
             User.add({
-               name,lastname,mail,password:hash,date,time,country,liveCountry,birthday,ocupation
+               name,lastname,mail,password:hash,date,time,country,liveCountry,birthday,ocupation,urlProfile:""
             })
             res.status(200).json({
                status:true,
@@ -296,6 +306,44 @@ res.status(200).json({
          message:"No se ha podido actualizar la informacion de su perfil"
       })
    }
-}
+},
+
+uploadProfilePicture:async(req,res) =>{
+   const id=req.params.id
+   const stream=fs.createReadStream(req.files.archivo.tempFilePath)
+   
+   try {
+     await s3.putObject({
+       Bucket:"socialmedia98",
+       Key:req.files.archivo.name,
+       Body:stream
+     },(erro,data)=>{
+       if(erro){
+         console.log(erro)
+       }
+       else{
+         console.log(data.Location)
+       }
+       
+     }) 
+      
+     s3.getSignedUrl('getObject',{Bucket:"socialmedia98",
+       Key:req.files.archivo.name,},(err, url) => {
+         if (err) {
+           console.log('Error generating URL:', err);
+         } else {
+           //actualizar user
+           User.doc(id).update({urlProfile:url}).then((e) => {console.log("funciona")})
+           
+         }
+       })
+   } catch (error) { 
+     console.log(error)
+     // error handling.
+   }  
+   res.send("wokring") 
+ }
+ 
+
 }
 //User.add({data}),User.get() data.docs,User.doc(id).update() the same with delete()
