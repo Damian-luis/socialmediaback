@@ -328,7 +328,7 @@ uploadProfilePicture:async(req,res) =>{
      }) 
       
      s3.getSignedUrl('getObject',{Bucket:process.env.NAME_BUCKET,
-       Key:req.files.archivo.name,},(err, url) => {
+       Key:req.files.archivo.name,Expires: 604800},(err, url)=>{
          if (err) {
            console.log('Error generating URL:', err);
          } else {
@@ -338,7 +338,7 @@ uploadProfilePicture:async(req,res) =>{
          }
        })
    } catch (error) { 
-     console.log(error)
+     console.log(error) 
      // error handling.
    }  
    res.send("wokring") 
