@@ -13,8 +13,8 @@ module.exports={
                mail:e._fieldsProto.mail.stringValue,
                id:e._ref._path.segments[1]
             }})
-const noFriends=response.filter(e=>{return e.id!==idUser})
-console.log(noFriends)
+
+
             const relacionesData=await RelationShip.get()
             
             const relaciones=relacionesData.docs.map(e=>{return {
@@ -28,8 +28,10 @@ console.log(noFriends)
                 idFollow:e._ref._path.segments[1]
             }})
             //const datos=response.filter(obj1 => datosId.some(obj2 => obj1.id === obj2.idFollowed));
+            console.log(response)
             const friends=relaciones.filter(e=>{return e.idUser===idUser})
-            //const noFriends=relaciones.filter(e=>{return e.idUser!==idUser})
+            const noFriends=response.filter(e=>{return e.id!==idUser})
+            console.log(idUser)
             res.status(200).json({ 
                 status:true,
                 message:"Seguidores conseguidos exitosamente",

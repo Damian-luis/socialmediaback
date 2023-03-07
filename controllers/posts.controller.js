@@ -94,7 +94,7 @@ module.exports={
             const myPosts=publicaciones.filter(e=>{return e.idUser===idUser})
             
             const allPosts = publicacionesAmigos.flatMap(user => user.post);
-            console.log(allPosts)
+           
             res.status(200).json({
                 status:true,
                 message:"Publicaciones recuperadas exitosamente",

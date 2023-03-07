@@ -311,10 +311,10 @@ res.status(200).json({
 uploadProfilePicture:async(req,res) =>{
    const id=req.params.id
    const stream=fs.createReadStream(req.files.archivo.tempFilePath)
-   
+   console.log("llegaste")
    try {
      await s3.putObject({
-       Bucket:"socialmedia98",
+       Bucket:process.env.NAME_BUCKET,
        Key:req.files.archivo.name,
        Body:stream
      },(erro,data)=>{
@@ -327,7 +327,7 @@ uploadProfilePicture:async(req,res) =>{
        
      }) 
       
-     s3.getSignedUrl('getObject',{Bucket:"socialmedia98",
+     s3.getSignedUrl('getObject',{Bucket:process.env.NAME_BUCKET,
        Key:req.files.archivo.name,},(err, url) => {
          if (err) {
            console.log('Error generating URL:', err);
