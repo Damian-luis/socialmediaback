@@ -11,7 +11,7 @@ require('dotenv').config()
 const PORT=process.env.PORT || 3000
 app.use(express.json())
 app.use(cors({
-  origin: '*'
+  origin: 'https://socialmedia-five.vercel.app'
 }))
 const fileUpload=require("express-fileUpload")
 app.use(fileUpload({
