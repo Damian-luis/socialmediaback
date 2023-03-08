@@ -1,7 +1,7 @@
 var jwt = require('jsonwebtoken');
 const {User,Post} = require('../config/db');
 const bcrypt = require('bcrypt');
-const { use } = require('../routes/RelationShips');
+
 const deleteField= require ("firebase/firestore");
 const admin = require('firebase-admin');
 const saltRounds = 10;
@@ -307,7 +307,7 @@ res.status(200).json({
       })
    }
 },
-
+/*
 uploadProfilePicture:async(req,res) =>{
    const id=req.params.id
    const stream=fs.createReadStream(req.files.archivo.tempFilePath)
@@ -343,7 +343,7 @@ uploadProfilePicture:async(req,res) =>{
    }  
    res.send("wokring") 
  }
- 
+ */
 
 }
 //User.add({data}),User.get() data.docs,User.doc(id).update() the same with delete()
