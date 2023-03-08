@@ -14,7 +14,7 @@ app.use(cors())
 const fileUpload=require("express-fileUpload")
 app.use(fileUpload({
     useTempFiles : true,
-    //tempFileDir : './images'
+    tempFileDir : './images'
   }));
 
 app.listen(PORT,()=>{
