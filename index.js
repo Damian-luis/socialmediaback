@@ -10,7 +10,7 @@ require('dotenv').config()
 const PORT=process.env.PORT || 3000
 app.use(express.json())
 app.use(cors())
-const fileUpload=require("express-fileUpload")
+const fileUpload=require("express-fileupload")
 app.use(fileUpload({
     useTempFiles : true,
     tempFileDir : './images'
