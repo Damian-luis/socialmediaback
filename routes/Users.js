@@ -10,5 +10,5 @@ Users.put('/logout',users.getLogout)
 Users.put('/test/:id',users.test)
 Users.get('/getUserData/:id',users.getUserData)
 Users.put('/updateUser/:id',users.updateUserData)
-Users.post('/updateProfilePicture/:id',users.uploadProfilePicture)
+//Users.post('/updateProfilePicture/:id',users.uploadProfilePicture)
 module.exports=Users 
