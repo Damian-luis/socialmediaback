@@ -307,7 +307,7 @@ res.status(200).json({
       })
    }
 },
-/*
+
 uploadProfilePicture:async(req,res) =>{
    const id=req.params.id
    const stream=fs.createReadStream(req.files.archivo.tempFilePath)
@@ -343,7 +343,7 @@ uploadProfilePicture:async(req,res) =>{
    }  
    res.send("wokring") 
  }
- */
+ 
 
 }
 //User.add({data}),User.get() data.docs,User.doc(id).update() the same with delete()
