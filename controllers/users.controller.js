@@ -1,6 +1,7 @@
 var jwt = require('jsonwebtoken');
 const {User,Post} = require('../config/db');
 const bcrypt = require('bcrypt');
+const {SECRET_KEY,NAME_BUCKET,REGION,ACCESS_KEY_ID,SECRET_ACESS_KEY_ID}= require('../config/s3')
 
 const deleteField= require ("firebase/firestore");
 const admin = require('firebase-admin');
@@ -8,9 +9,9 @@ const saltRounds = 10;
 let today = new Date();
 const AWS=require('aws-sdk')
 const s3=new AWS.S3({
-  region:process.env.REGION,
-  accessKeyId:process.env.ACCESS_KEY_ID,
-  secretAccessKey:process.env.SECRET_ACESS_KEY_ID
+  region:REGION,
+  accessKeyId:ACCESS_KEY_ID,
+  secretAccessKey:SECRET_ACESS_KEY_ID
 })
 const fs=require('fs')
 module.exports={
@@ -311,10 +312,11 @@ res.status(200).json({
 uploadProfilePicture:async(req,res) =>{
    const id=req.params.id
    const stream=fs.createReadStream(req.files.archivo.tempFilePath)
+   console.log(req.files)
    console.log("llegaste")
    try {
      await s3.putObject({
-       Bucket:process.env.NAME_BUCKET,
+       Bucket:NAME_BUCKET,
        Key:req.files.archivo.name,
        Body:stream
      },(erro,data)=>{
@@ -327,7 +329,7 @@ uploadProfilePicture:async(req,res) =>{
        
      }) 
       
-     s3.getSignedUrl('getObject',{Bucket:process.env.NAME_BUCKET,
+     s3.getSignedUrl('getObject',{Bucket:NAME_BUCKET,
        Key:req.files.archivo.name,Expires: 604800},(err, url)=>{
          if (err) {
            console.log('Error generating URL:', err);
