@@ -8,9 +8,9 @@ const saltRounds = 10;
 let today = new Date();
 const AWS=require('aws-sdk')
 const s3=new AWS.S3({
-  region:"us-east-2",
-  accessKeyId:"AKIA35DBCFOSMW75LP7L",
-  secretAccessKey:"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"
+  region:process.env.REGION,
+  accessKeyId:process.env.ACCESS_KEY_ID,
+  secretAccessKey:SECRET_ACESS_KEY_ID
 })
 const fs=require('fs')
 module.exports={
