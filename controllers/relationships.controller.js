@@ -14,6 +14,7 @@ module.exports={
                 id: doc._ref._path.segments[1],
                 urlProfile: doc._fieldsProto.urlProfile.stringValue, // Agregamos la URL del perfil
                 liveCountry: doc._fieldsProto.liveCountry.stringValue, // Agregamos la propiedad liveCountry
+                createdAt: doc._fieldsProto.createdAt.timestampValue, // Agregamos la propiedad createdAt
             })));
     
             const relationshipData = await RelationShip.get();
@@ -31,17 +32,18 @@ module.exports={
             const friends = relationships.filter((relationship) => relationship.idUser === idUser);
             const noFriends = userData.filter((user) => user.id !== idUser);
     
-            // Obtener la URL del perfil y liveCountry para los amigos
+            // Obtener la URL del perfil, liveCountry y createdAt para los amigos
             for (let i = 0; i < friends.length; i++) {
                 const friendId = friends[i].idFollowed;
                 const friend = userData.find((user) => user.id === friendId);
     
                 if (friend) {
-                    // Asignar la URL del perfil y liveCountry al amigo
+                    // Asignar la URL del perfil, liveCountry y createdAt al amigo
                     friends[i].urlProfile = friend.urlProfile;
                     friends[i].liveCountry = friend.liveCountry;
+                    friends[i].createdAt = friend.createdAt;
                 } else {
-                    // Si el amigo no está en userData, obtener la URL del perfil y liveCountry de la base de datos
+                    // Si el amigo no está en userData, obtener la URL del perfil, liveCountry y createdAt de la base de datos
                     const friendDoc = await User.doc(friendId).get();
                     const friendData = {
                         name: friendDoc._fieldsProto.name.stringValue,
@@ -49,12 +51,14 @@ module.exports={
                         mail: friendDoc._fieldsProto.mail.stringValue,
                         urlProfile: friendDoc._fieldsProto.urlProfile.stringValue,
                         liveCountry: friendDoc._fieldsProto.liveCountry.stringValue,
+                        createdAt: friendDoc._fieldsProto.createdAt.timestampValue,
                         id: friendDoc._ref._path.segments[1],
                     };
     
-                    // Asignar la URL del perfil y liveCountry al amigo
+                    // Asignar la URL del perfil, liveCountry y createdAt al amigo
                     friends[i].urlProfile = friendData.urlProfile;
                     friends[i].liveCountry = friendData.liveCountry;
+                    friends[i].createdAt = friendData.createdAt;
                 }
             }
     
@@ -72,6 +76,7 @@ module.exports={
             });
         }
     },
+    
     
     
     addFollow: async(req,res) => {

@@ -205,45 +205,68 @@ try{
       }
    });
     },
-    addUser: async(req, res) => {
-      const {name,lastname,mail,password,country,liveCountry,birthday,ocupation}=req.body
-      const data=await User.get()
-      const response=await data.docs.map(e=>{return {
-         name:e._fieldsProto.name.stringValue,
-         lastname:e._fieldsProto.lastname.stringValue,
-         mail:e._fieldsProto.mail.stringValue,
-         id:e._ref._path.segments[1]
-      }})
-      let date = today.toLocaleDateString()
-let time = today.toLocaleTimeString() 
-      const userExist=response.some(user=>user.mail===mail)
-      if(userExist) return res.status(400).json({
-         status:false,
-         message:"Ya existe un usuario registrado con ese correo electrónico"
-      })
-      try {
-         bcrypt.hash(password, saltRounds,async(err, hash) =>{
-            if(err) return res.status(500).json({
-               status:false,
-               message:"Error al crear el usuario"
-            })
-            User.add({
-               name,lastname,mail,password:hash,date,time,country,liveCountry,birthday,ocupation,urlProfile:""
-            })
-            res.status(200).json({
-               status:true,
-               message:"Usuario creado con exito"
-            })
-        }); 
-      }
-      catch(error) {
-         res.status(400).json({
-            status:false,
-            message:error
-         })
-      }
+    addUser: async (req, res) => {
+      const { name, lastname, mail, password, country, liveCountry, birthday, ocupation } = req.body;
+      const data = await User.get();
+      const response = await data.docs.map((e) => {
+          return {
+              name: e._fieldsProto.name.stringValue,
+              lastname: e._fieldsProto.lastname.stringValue,
+              mail: e._fieldsProto.mail.stringValue,
+              id: e._ref._path.segments[1],
+          };
+      });
+      const today = new Date();
+      let date = today.toLocaleDateString();
+      let time = today.toLocaleTimeString();
       
-    } ,
+      const userExist = response.some((user) => user.mail === mail);
+      
+      if (userExist) {
+          return res.status(400).json({
+              status: false,
+              message: "Ya existe un usuario registrado con ese correo electrónico",
+          });
+      }
+  
+      try {
+          bcrypt.hash(password, saltRounds, async (err, hash) => {
+              if (err) {
+                  return res.status(500).json({
+                      status: false,
+                      message: "Error al crear el usuario",
+                  });
+              }
+  
+              const newUser = {
+                  name,
+                  lastname,
+                  mail,
+                  password: hash,
+                  date,
+                  time,
+                  country,
+                  liveCountry,
+                  birthday,
+                  ocupation,
+                  urlProfile: "",
+                  createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              };
+  
+              await User.add(newUser);
+  
+              res.status(200).json({
+                  status: true,
+                  message: "Usuario creado con éxito",
+              });
+          });
+      } catch (error) {
+          res.status(400).json({
+              status: false,
+              message: error,
+          });
+      }
+  },
 
 
 
