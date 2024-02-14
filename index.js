@@ -6,9 +6,11 @@ const Posts=require('./routes/Posts')
 const Interactions=require('./routes/Interactions')
 const RelationShips=require('./routes/RelationShips')
 const conexionDb=require('./db/index')
+const morgan = require('morgan');
 require('dotenv').config()
 const PORT=process.env.PORT || 3000
 app.use(express.json())
+app.use(morgan('dev'));
 app.use(cors())
 const fileUpload=require("express-fileupload")
 app.use(fileUpload({
