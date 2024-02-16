@@ -18,4 +18,5 @@ const firebaseConfig = {
   const User=db.collection('User')
   const Post=db.collection('Post')
   const RelationShip=db.collection('RelationShip')
-  module.exports={User,Post,RelationShip}
+  const Messages=db.collection('Messages')
+  module.exports={User,Post,RelationShip,Messages}
