@@ -16,7 +16,7 @@ require('dotenv').config()
 const server = http.createServer(app);
 const io = require('socket.io')(server, {
   cors: {
-    origin: 'https://socialmedia-five.vercel.app',
+    origin: '*',
     methods: ['GET', 'POST','UPDATE','DELETE'],
   },
 });
