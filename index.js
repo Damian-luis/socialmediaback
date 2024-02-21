@@ -16,7 +16,7 @@ require('dotenv').config()
 const server = http.createServer(app);
 const io = require('socket.io')(server, {
   cors: {
-    origin: 'http://localhost:3000',
+    origin: 'https://socialmedia-five.vercel.app',
     methods: ['GET', 'POST','UPDATE','DELETE'],
   },
 });
@@ -106,7 +106,7 @@ io.on('connection', (socket) => {
     } else {
       console.error(`Destinatario with id ${para} not found`);
     }
-  });
+  }); 
   
   
   
