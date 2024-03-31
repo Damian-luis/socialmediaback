@@ -12,6 +12,7 @@ const conexionDb=require('./db/index')
 const {Messages}=require('./config/db')
 const morgan = require('morgan');
 const admin = require('firebase-admin');
+const util = require('util');
 require('dotenv').config()
 const server = http.createServer(app);
 const io = require('socket.io')(server, {
@@ -21,7 +22,7 @@ const io = require('socket.io')(server, {
   },
 });
 
-const PORT=process.env.PORT || 3000
+const PORT=process.env.PORT || 3006
 app.use(express.json())
 app.use(morgan('dev'));
 app.use(cors())
@@ -134,11 +135,54 @@ app.use("/posts",Posts)
 app.use("/relationships",RelationShips)   
 app.use("/interactions",Interactions) 
 app.use("/messages",MessagesR)
+app.get("/test",(req,res)=>{
+  res.send("working yup")
+}) 
 server.listen(PORT, async () => {
   try {
      // await conexionDb.connection();
-      console.log('Listening on port ' + PORT);
+     
+      console.log('Listening on port ' + PORT+'dxrffrfrrS');
   } catch (error) {
       console.error('Error connecting to the database:', error);
   }
 });
+
+//REDIS CONFIG
+
+const redis = require("redis"); 
+
+const redisclient = redis.createClient({
+  legacyMode:true,
+  socket:{
+    port:6379,
+    host:"redis"
+  }
+});
+//extra metodos async
+const { promisifyAll } = require('bluebird');
+const { promisify } = require("util");
+redisclient.getAsync = promisify(redisclient.get).bind(redisclient);
+redisclient.setAsync = promisify(redisclient.set).bind(redisclient);
+
+
+
+(async () => { 
+    await redisclient.connect(); 
+   
+})(); 
+  
+console.log("Connecting to the Redis"); 
+  
+redisclient.on("ready", () => { 
+    console.log("Connected!"); 
+    app.set('redisClient', redisclient);
+}); 
+  
+redisclient.on("error", (err) => { 
+    console.log("Error in the Connection"); 
+    console.log(err)
+}); 
+
+
+//module.exports={redisclient}

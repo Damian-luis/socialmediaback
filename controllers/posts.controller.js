@@ -1,11 +1,31 @@
 const {Post,RelationShip,User} = require('../config/db');
+const {redisclient}=require("../index.js")
 let today = new Date();
 module.exports={
     getAllPosts:async(req,res)=>{
-        
         const {idUser}=req.params
-
+        const redisclient = req.app.get('redisClient');
+        console.log('entra a controlador getall')
+       
         try {
+          const test = await redisclient.get("test")
+          console.log(test)
+          const myPostsKey = `userPosts:${idUser}`;
+          console.log('intentara recuperar')
+          const cachedMisPublicaciones = await redisclient.get(myPostsKey)
+          console.log('recupero')
+          console.log(cachedMisPublicaciones)
+          let myPosts;
+          const myFriendsPostsKey = `userFriendsPosts:${idUser}`;
+          const cachedPublicacionesAmigos = await redisclient.get(myFriendsPostsKey);
+          let myFriendsPosts;
+ console.log('hast aqui llega')
+          if(cachedMisPublicaciones && cachedPublicacionesAmigos){
+            myPosts = JSON.parse(cachedMisPublicaciones)
+            myFriendsPosts= JSON.parse(cachedPublicacionesAmigos)
+            console.log('se recupero datos de redis')
+          }else{
+
             const userDocs = await User.get().then((snapshot) => snapshot.docs);
             const usersData = userDocs.map((doc) => {
               return {
@@ -19,7 +39,7 @@ module.exports={
                 id: doc._ref._path.segments[1],
               };
             });
-        
+
             const relationshipDocs = await RelationShip.get();
             const myFriends = relationshipDocs.docs.filter((doc) => doc._fieldsProto.idUser.stringValue === idUser);
         
@@ -68,7 +88,7 @@ module.exports={
               };
             });
         
-            const myFriendsPosts = allPosts.filter((post) => idFriends.includes(post.idUser));
+             myFriendsPosts = allPosts.filter((post) => idFriends.includes(post.idUser));
         
             for (let i = 0; i < myFriendsPosts.length; i++) {
               for (let j = 0; j < myFriendsPosts[i].usersLinked.length; j++) {
@@ -128,8 +148,27 @@ module.exports={
                 myFriendsPosts[i].urlProfile = authorData.urlProfile;
               }
             }
+
+             myPosts = allPosts.filter((post) => post.idUser === idUser);
+           console.log('intentara guardar data en redis')
+           try{
+            const estado=await redisclient.set('test', 'damian');
+            console.log('valor de estado '+estado)
+           }
+           catch(e){
+            console.log(e)
+           }
+             await redisclient.set(myPostsKey, JSON.stringify(myPosts));
+             await redisclient.set(myFriendsPostsKey, JSON.stringify(myFriendsPosts));
+
+            console.log('se recupero datos de base de datos')
+          }
+          
+            
         
-            const myPosts = allPosts.filter((post) => post.idUser === idUser);
+           
+        
+            
         
             res.status(200).json({
               status: true,
@@ -141,7 +180,7 @@ module.exports={
             console.error(error);
             res.status(400).json({
               status: false,
-              message: "No se han podido recuperar las publicaciones",
+              message: "No se han podido recuperar las publicaciones dea",
             });
           }
     },
