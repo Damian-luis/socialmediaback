@@ -1,7 +1,7 @@
 var jwt = require('jsonwebtoken');
 const {User,Post} = require('../config/db');
 const bcrypt = require('bcryptjs');
-const {SECRET_KEY,NAME_BUCKET,REGION,ACCESS_KEY_ID,SECRET_ACESS_KEY_ID}= require('../config/s3')
+const {SECRET_KEY,NAME_BUCKET,REGION,ACCESS_KEY_ID,SECRET_ACESS_KEY_ID, BUCKET_NAME}= require('../config/s3')
 
 const deleteField= require ("firebase/firestore");
 const admin = require('firebase-admin');
@@ -9,9 +9,9 @@ const saltRounds = 10;
 let today = new Date();
 const AWS=require('aws-sdk')
 const s3=new AWS.S3({
-  region:'us-east-1',
-  accessKeyId:'AKIAXYKJQU2TJQDHC6GA',
-  secretAccessKey:'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'
+  region: REGION,
+  accessKeyId:  ACCESS_KEY_ID,
+  secretAccessKey:SECRET_ACESS_KEY_ID
 })
 const fs=require('fs')
 module.exports={
@@ -372,7 +372,7 @@ uploadProfilePicture:async(req,res) =>{
    console.log("llegaste")
    try {
      await s3.putObject({
-       Bucket:'socialmedia998',
+       Bucket:BUCKET_NAME,
        Key:req.files.archivo.name,
        Body:stream
      },(erro,data)=>{
@@ -385,7 +385,7 @@ uploadProfilePicture:async(req,res) =>{
        
      }) 
       
-     s3.getSignedUrl('getObject',{Bucket:'socialmedia998',
+     s3.getSignedUrl('getObject',{Bucket:BUCKET_NAME,
        Key:req.files.archivo.name,Expires: 604800},(err, url)=>{
          if (err) {
            console.log('Error generating URL:', err);
