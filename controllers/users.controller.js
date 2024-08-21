@@ -386,7 +386,7 @@ uploadProfilePicture:async(req,res) =>{
      }) 
       
      s3.getSignedUrl('getObject',{Bucket:NAME_BUCKET,
-       Key:req.files.archivo.name,Expires: 604800},(err, url)=>{
+       Key:req.files.archivo.name,Expires: 60 * 60 * 24 * 365},(err, url)=>{
          if (err) {
            console.log('Error generating URL:', err);
          } else {
