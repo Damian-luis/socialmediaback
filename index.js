@@ -36,7 +36,8 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3002',
   'https://socialmedia-five.vercel.app',
-  'https://socialmedia-five.vercel.app/'
+  'https://socialmedia-five.vercel.app/',
+  'https://socialmediaback-7haw67jrc-damianluis-projects.vercel.app'
 ];
 
 // Configuración de CORS para Express
@@ -45,7 +46,11 @@ app.use(cors({
     // Permitir solicitudes sin origen (como las aplicaciones móviles o Postman)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.REACT_APP_URL_FRONTEND === origin) {
+    // Normalizar el origen removiendo la barra final si existe
+    const normalizedOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+    const normalizedAllowedOrigins = allowedOrigins.map(o => o.endsWith('/') ? o.slice(0, -1) : o);
+    
+    if (normalizedAllowedOrigins.includes(normalizedOrigin) || process.env.REACT_APP_URL_FRONTEND === normalizedOrigin) {
       callback(null, true);
     } else {
       console.log('Origen bloqueado por CORS:', origin);
@@ -62,7 +67,12 @@ const io = new Server(server, {
   cors: {
     origin: function(origin, callback) {
       if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) !== -1 || process.env.REACT_APP_URL_FRONTEND === origin) {
+      
+      // Normalizar el origen removiendo la barra final si existe
+      const normalizedOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+      const normalizedAllowedOrigins = allowedOrigins.map(o => o.endsWith('/') ? o.slice(0, -1) : o);
+      
+      if (normalizedAllowedOrigins.includes(normalizedOrigin) || process.env.REACT_APP_URL_FRONTEND === normalizedOrigin) {
         callback(null, true);
       } else {
         console.log('Origen bloqueado por Socket.IO:', origin);
