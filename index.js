@@ -31,9 +31,27 @@ if (!admin.apps.length) {
   });
 }
 
+// Lista de orígenes permitidos
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3002',
+  'https://socialmedia-five.vercel.app',
+  'https://socialmedia-five.vercel.app/'
+];
+
 // Configuración de CORS para Express
 app.use(cors({
-  origin: process.env.REACT_APP_URL_FRONTEND || 'http://localhost:3000',
+  origin: function(origin, callback) {
+    // Permitir solicitudes sin origen (como las aplicaciones móviles o Postman)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.REACT_APP_URL_FRONTEND === origin) {
+      callback(null, true);
+    } else {
+      console.log('Origen bloqueado por CORS:', origin);
+      callback(new Error('No permitido por CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -42,7 +60,15 @@ app.use(cors({
 // Configuración de Socket.IO con opciones más robustas
 const io = new Server(server, {
   cors: {
-    origin: process.env.REACT_APP_URL_FRONTEND || 'http://localhost:3002',
+    origin: function(origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1 || process.env.REACT_APP_URL_FRONTEND === origin) {
+        callback(null, true);
+      } else {
+        console.log('Origen bloqueado por Socket.IO:', origin);
+        callback(new Error('No permitido por CORS'));
+      }
+    },
     methods: ['GET', 'POST'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']
