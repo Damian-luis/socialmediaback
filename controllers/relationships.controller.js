@@ -4,80 +4,79 @@ let today = new Date();
 module.exports={
     allFollows: async (req, res) => {
         const { idUser } = req.params;
-        const { idFollowed } = req.params;
-    
         try {
-            const userData = await User.get().then((snapshot) => snapshot.docs.map((doc) => ({
-                name: doc._fieldsProto.name.stringValue,
-                lastname: doc._fieldsProto.lastname.stringValue,
-                mail: doc._fieldsProto.mail.stringValue,
-                id: doc._ref._path.segments[1],
-                urlProfile: doc._fieldsProto.urlProfile.stringValue, // Agregamos la URL del perfil
-                liveCountry: doc._fieldsProto.liveCountry.stringValue, // Agregamos la propiedad liveCountry
-                createdAt: doc._fieldsProto.createdAt.timestampValue, // Agregamos la propiedad createdAt
-            })));
-    
-            const relationshipData = await RelationShip.get();
-            const relationships = relationshipData.docs.map((doc) => ({
-                idUser: doc._fieldsProto.idUser.stringValue,
-                idFollowed: doc._fieldsProto.idFollowed.stringValue,
-                name: doc._fieldsProto.name.stringValue,
-                lastname: doc._fieldsProto.lastname.stringValue,
-                mail: doc._fieldsProto.mail.stringValue,
-                date: doc._fieldsProto.date.stringValue,
-                time: doc._fieldsProto.time.stringValue,
-                idFollow: doc._ref._path.segments[1],
+            // Obtener todos los usuarios
+            const userData = await User.get().then((snapshot) => snapshot.docs.map((doc) => {
+                const data = doc.data();
+                return {
+                    name: data.name,
+                    lastname: data.lastname,
+                    mail: data.mail,
+                    id: doc.id,
+                    urlProfile: data.urlProfile,
+                    liveCountry: data.liveCountry,
+                    createdAt: data.createdAt
+                };
             }));
-    
-            const friends = relationships.filter((relationship) => relationship.idUser === idUser);
-            const noFriends = userData.filter((user) => user.id !== idUser);
-    
-            // Obtener la URL del perfil, liveCountry y createdAt para los amigos
-            for (let i = 0; i < friends.length; i++) {
-                const friendId = friends[i].idFollowed;
-                const friend = userData.find((user) => user.id === friendId);
-    
-                if (friend) {
-                    // Asignar la URL del perfil, liveCountry y createdAt al amigo
-                    friends[i].urlProfile = friend.urlProfile;
-                    friends[i].liveCountry = friend.liveCountry;
-                    friends[i].createdAt = friend.createdAt;
-                } else {
-                    // Si el amigo no está en userData, obtener la URL del perfil, liveCountry y createdAt de la base de datos
-                    const friendDoc = await User.doc(friendId).get();
-                    const friendData = {
-                        name: friendDoc._fieldsProto.name.stringValue,
-                        lastname: friendDoc._fieldsProto.lastname.stringValue,
-                        mail: friendDoc._fieldsProto.mail.stringValue,
-                        urlProfile: friendDoc._fieldsProto.urlProfile.stringValue,
-                        liveCountry: friendDoc._fieldsProto.liveCountry.stringValue,
-                        createdAt: friendDoc._fieldsProto.createdAt.timestampValue,
-                        id: friendDoc._ref._path.segments[1],
-                    };
-    
-                    // Asignar la URL del perfil, liveCountry y createdAt al amigo
-                    friends[i].urlProfile = friendData.urlProfile;
-                    friends[i].liveCountry = friendData.liveCountry;
-                    friends[i].createdAt = friendData.createdAt;
-                }
-            }
-    
+
+            // Obtener relaciones de amistad
+            const friendships = await RelationShip
+                .where('senderId', '==', idUser)
+                .where('status', '==', 'accepted')
+                .get();
+
+            // Obtener seguidores
+            const follows = await RelationShip
+                .where('idUser', '==', idUser)
+                .get();
+
+            const friends = friendships.docs.map(doc => {
+                const data = doc.data();
+                const friend = userData.find(user => user.id === data.receiverId);
+                return {
+                    ...friend,
+                    idFollow: doc.id,
+                    date: data.timestamp,
+                    time: data.timestamp,
+                    status: 'friend'
+                };
+            });
+
+            const followers = follows.docs.map(doc => {
+                const data = doc.data();
+                const follower = userData.find(user => user.id === data.idFollowed);
+                return {
+                    ...follower,
+                    idFollow: doc.id,
+                    date: data.date,
+                    time: data.time,
+                    status: 'follower'
+                };
+            });
+
+            // Combinar amigos y seguidores
+            const allRelationships = [...friends, ...followers];
+
+            // Obtener usuarios que no son amigos ni seguidores
+            const noRelations = userData.filter(user => 
+                user.id !== idUser && 
+                !allRelationships.some(rel => rel.id === user.id)
+            );
+//console.log(allRelationships)
             res.status(200).json({
                 status: true,
-                message: "Seguidores conseguidos exitosamente",
-                friends,
-                noFriends,
+                message: "Relaciones obtenidas exitosamente",
+                relationships: allRelationships,
+                noRelations,
             });
         } catch (error) {
             console.error(error);
             res.status(400).json({
                 status: false,
-                message: "No se han podido recuperar los seguidores",
+                message: "No se han podido recuperar las relaciones",
             });
         }
     },
-    
-    
     
     addFollow: async(req,res) => {
         const {idUser,idFollowed,name,lastname,mail}=req.params
@@ -104,16 +103,14 @@ let time = today.toLocaleTimeString()
                 message:"No se ha podido seguir a este usuario"
             })
         }
-        
     },
+
     deleteFollow:async (req,res) => {
-        const {idUser}=req.params
-        const {idFollowed}=req.params
         const {idFollow}=req.params
         try{
             await RelationShip.doc(idFollow).delete()
-            res.status(400).json({
-                status:false,
+            res.status(200).json({
+                status:true,
                 message:"Has dejado de seguir a este usuario"
             })
         }
@@ -123,6 +120,256 @@ let time = today.toLocaleTimeString()
                 message:"No se puede dejar de seguir a este usuario"
             })
         }
-        
+    },
+
+    // Obtener estado de la relación entre dos usuarios
+    getFriendshipStatus: async (req, res) => {
+        const { userId1, userId2 } = req.params;
+        try {
+            const friendship = await RelationShip
+                .where('senderId', 'in', [userId1, userId2])
+                .where('receiverId', 'in', [userId1, userId2])
+                .limit(1)
+                .get();
+
+            if (friendship.empty) {
+                return res.json({ status: false });
+            }
+
+            const friendshipData = friendship.docs[0].data();
+            return res.json({ 
+                status: true,
+                friendshipStatus: friendshipData.status,
+                requestId: friendship.docs[0].id,
+                senderId: friendshipData.senderId
+            });
+        } catch (error) {
+            console.error('Error getting friendship status:', error);
+            res.status(500).json({ error: 'Error al obtener el estado de la amistad' });
+        }
+    },
+
+    // Enviar solicitud de amistad
+    sendFriendRequest: async (req, res) => {
+        const { senderId, receiverId } = req.body;
+        try {
+            // Verificar si ya existe una relación
+            const existingFriendship = await RelationShip
+                .where('senderId', 'in', [senderId, receiverId])
+                .where('receiverId', 'in', [senderId, receiverId])
+                .limit(1)
+                .get();
+
+            if (!existingFriendship.empty) {
+                return res.status(400).json({ 
+                    status: false,
+                    message: 'Ya existe una relación entre estos usuarios' 
+                });
+            }
+
+            // Obtener datos del remitente
+            const senderDoc = await User.doc(senderId).get();
+            const senderData = senderDoc.data();
+
+            // Crear nueva solicitud de amistad
+            const friendshipRef = await RelationShip.add({
+                senderId,
+                receiverId,
+                senderName: senderData.name,
+                senderLastname: senderData.lastname,
+                senderProfile: senderData.urlProfile,
+                status: 'pending',
+                timestamp: new Date(),
+                lastInteraction: new Date(),
+                mutualFriends: 0,
+                commonInterests: [],
+                friendshipStrength: 0
+            });
+
+            // Emitir evento de socket
+            const io = req.app.get('io');
+            if (io) {
+                io.emit('friend_request_received', {
+                    friendshipId: friendshipRef.id,
+                    senderId,
+                    receiverId,
+                    sender: {
+                        id: senderId,
+                        name: senderData.name,
+                        lastname: senderData.lastname,
+                        urlProfile: senderData.urlProfile
+                    }
+                });
+            }
+
+            res.status(200).json({ 
+                status: true,
+                message: 'Solicitud de amistad enviada',
+                friendshipId: friendshipRef.id,
+                sender: {
+                    id: senderId,
+                    name: senderData.name,
+                    lastname: senderData.lastname,
+                    urlProfile: senderData.urlProfile
+                }
+            });
+        } catch (error) {
+            console.error('Error sending friend request:', error);
+            res.status(500).json({ 
+                status: false,
+                message: 'Error al enviar la solicitud de amistad' 
+            });
+        }
+    },
+
+    // Aceptar solicitud de amistad
+    acceptFriendRequest: async (req, res) => {
+        const { requestId, receiverId } = req.body;
+        try {
+            const friendshipRef = RelationShip.doc(requestId);
+            const friendship = await friendshipRef.get();
+
+            if (!friendship.exists) {
+                return res.status(404).json({
+                    status: false,
+                    message: 'Solicitud de amistad no encontrada'
+                });
+            }
+
+            const friendshipData = friendship.data();
+            if (friendshipData.receiverId !== receiverId) {
+                return res.status(403).json({
+                    status: false,
+                    message: 'No tienes permiso para aceptar esta solicitud'
+                });
+            }
+
+            // Obtener datos del receptor
+            const receiverDoc = await User.doc(receiverId).get();
+            const receiverData = receiverDoc.data();
+
+            // Calcular amigos en común
+            const senderFriends = await RelationShip
+                .where('senderId', '==', friendshipData.senderId)
+                .where('status', '==', 'accepted')
+                .get();
+
+            const receiverFriends = await RelationShip
+                .where('senderId', '==', receiverId)
+                .where('status', '==', 'accepted')
+                .get();
+
+            const mutualFriends = senderFriends.docs.filter(senderFriend => 
+                receiverFriends.docs.some(receiverFriend => 
+                    receiverFriend.data().receiverId === senderFriend.data().receiverId
+                )
+            ).length;
+
+            // Actualizar la solicitud original
+            await friendshipRef.update({
+                status: 'accepted',
+                acceptedAt: new Date(),
+                lastInteraction: new Date(),
+                mutualFriends
+            });
+
+            // Crear la relación inversa
+            await RelationShip.add({
+                senderId: receiverId,
+                receiverId: friendshipData.senderId,
+                senderName: receiverData.name,
+                senderLastname: receiverData.lastname,
+                senderProfile: receiverData.urlProfile,
+                status: 'accepted',
+                timestamp: friendshipData.timestamp,
+                acceptedAt: new Date(),
+                lastInteraction: new Date(),
+                mutualFriends,
+                commonInterests: [],
+                friendshipStrength: 0
+            });
+
+            res.status(200).json({
+                status: true,
+                message: 'Solicitud de amistad aceptada',
+                mutualFriends
+            });
+        } catch (error) {
+            console.error('Error accepting friend request:', error);
+            res.status(500).json({
+                status: false,
+                message: 'Error al aceptar la solicitud de amistad'
+            });
+        }
+    },
+
+    // Rechazar solicitud de amistad
+    rejectFriendRequest: async (req, res) => {
+        const { requestId, receiverId } = req.body;
+        try {
+            const friendshipRef = RelationShip.doc(requestId);
+            const friendship = await friendshipRef.get();
+
+            if (!friendship.exists) {
+                return res.status(404).json({
+                    status: false,
+                    message: 'Solicitud de amistad no encontrada'
+                });
+            }
+
+            const friendshipData = friendship.data();
+            if (friendshipData.receiverId !== receiverId) {
+                return res.status(403).json({
+                    status: false,
+                    message: 'No tienes permiso para rechazar esta solicitud'
+                });
+            }
+
+            await friendshipRef.delete();
+
+            res.status(200).json({
+                status: true,
+                message: 'Solicitud de amistad rechazada'
+            });
+        } catch (error) {
+            console.error('Error rejecting friend request:', error);
+            res.status(500).json({
+                status: false,
+                message: 'Error al rechazar la solicitud de amistad'
+            });
+        }
+    },
+
+    // Eliminar amigo
+    removeFriend: async (req, res) => {
+        const { userId1, userId2 } = req.params;
+        try {
+            const friendship = await RelationShip
+                .where('senderId', 'in', [userId1, userId2])
+                .where('receiverId', 'in', [userId1, userId2])
+                .where('status', '==', 'accepted')
+                .limit(1)
+                .get();
+
+            if (friendship.empty) {
+                return res.status(404).json({
+                    status: false,
+                    message: 'No se encontró la amistad'
+                });
+            }
+
+            await friendship.docs[0].ref.delete();
+
+            res.status(200).json({
+                status: true,
+                message: 'Amigo eliminado correctamente'
+            });
+        } catch (error) {
+            console.error('Error removing friend:', error);
+            res.status(500).json({
+                status: false,
+                message: 'Error al eliminar amigo'
+            });
+        }
     }
-}
+};

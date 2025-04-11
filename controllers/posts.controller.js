@@ -1,149 +1,61 @@
 const {Post,RelationShip,User} = require('../config/db');
 let today = new Date();
 module.exports={
-    getAllPosts:async(req,res)=>{
-        
-        const {idUser}=req.params
-
+    getAllPosts: async (req, res) => {
+        const { idUser } = req.params;
         try {
-            const userDocs = await User.get().then((snapshot) => snapshot.docs);
-            const usersData = userDocs.map((doc) => {
-              return {
-                name: doc._fieldsProto.name.stringValue,
-                lastname: doc._fieldsProto.lastname.stringValue,
-                mail: doc._fieldsProto.mail.stringValue,
-                date: doc._fieldsProto.date.stringValue,
-                time: doc._fieldsProto.time.stringValue,
-                password: doc._fieldsProto.password.stringValue,
-                urlProfile: doc._fieldsProto.urlProfile.stringValue,
-                id: doc._ref._path.segments[1],
-              };
-            });
-        
-            const relationshipDocs = await RelationShip.get();
-            const myFriends = relationshipDocs.docs.filter((doc) => doc._fieldsProto.idUser.stringValue === idUser);
-        
-            const friendData = myFriends.map((doc) => {
-              return {
-                idUser: doc._fieldsProto.idUser.stringValue,
-                idFollowed: doc._fieldsProto.idFollowed.stringValue,
-                date: doc._fieldsProto.date.stringValue,
-                time: doc._fieldsProto.time.stringValue,
-                idFollow: doc._ref._path.segments[1],
-              };
-            });
-        
-            const idFriends = friendData.map((friend) => friend.idFollowed);
-        
-            const postDocs = await Post.get();
-            const allPosts = postDocs.docs.map((doc) => {
-              return {
-                publicacion: doc._fieldsProto.publicacion.stringValue,
-                nombre: doc._fieldsProto.name.stringValue,
-                apellido: doc._fieldsProto.lastname.stringValue,
-                idUser: doc._fieldsProto.idUser.stringValue,
-                date: doc._fieldsProto.date.stringValue,
-                time: doc._fieldsProto.time.stringValue,
-                usersComments: doc._fieldsProto.usersComments.arrayValue.values.map((comment) => {
-                  return {
-                    name: comment.mapValue.fields.name.stringValue,
-                    lastname: comment.mapValue.fields.lastname.stringValue,
-                    time: comment.mapValue.fields.time.stringValue,
-                    date: comment.mapValue.fields.date.stringValue,
-                    comment: comment.mapValue.fields.comment.stringValue,
-                    idComment: comment.mapValue.fields.idComment.stringValue,
-                    idUser: comment.mapValue.fields.idUser.stringValue,
-                    urlProfile: "", // Inicializar la URL del perfil
-                  };
-                }),
-                usersLinked: doc._fieldsProto.usersLinked.arrayValue.values.map((like) => {
-                  return {
-                    name: like.mapValue.fields.name.stringValue,
-                    lastname: like.mapValue.fields.lastname.stringValue,
-                    idLike: like.mapValue.fields.idLike.stringValue,
-                    idUser: like.mapValue.fields.idUser.stringValue,
-                  };
-                }),
-                idPublicacion: doc._ref._path.segments[1],
-              };
-            });
-        
-            const myFriendsPosts = allPosts.filter((post) => idFriends.includes(post.idUser));
-        
-            for (let i = 0; i < myFriendsPosts.length; i++) {
-              for (let j = 0; j < myFriendsPosts[i].usersLinked.length; j++) {
-                if (myFriendsPosts[i].usersLinked[j].idUser === idUser) {
-                  myFriendsPosts[i].like = true;
-                }
-              }
-        
-              myFriendsPosts[i].usersComments.forEach(async (comment) => {
-                const commenterId = comment.idUser;
-                const commenter = usersData.find((user) => user.id === commenterId);
-        
-                if (commenter) {
-                  // Asignar la URL del perfil al comentario
-                  comment.urlProfile = commenter.urlProfile;
-                } else {
-                  // Si el comentario es de un usuario que no está en usersData, obtener la URL del perfil de la base de datos
-                  const commenterDoc = await User.doc(commenterId).get();
-                  const commenterData = {
-                    name: commenterDoc._fieldsProto.name.stringValue,
-                    lastname: commenterDoc._fieldsProto.lastname.stringValue,
-                    mail: commenterDoc._fieldsProto.mail.stringValue,
-                    date: commenterDoc._fieldsProto.date.stringValue,
-                    time: commenterDoc._fieldsProto.time.stringValue,
-                    password: commenterDoc._fieldsProto.password.stringValue,
-                    urlProfile: commenterDoc._fieldsProto.urlProfile.stringValue,
-                    id: commenterDoc._ref._path.segments[1],
-                  };
-        
-                  // Asignar la URL del perfil al comentario
-                  comment.urlProfile = commenterData.urlProfile;
-                }
-              });
-        
-              // Obtener la URL de perfil del usuario que hizo la publicación
-              const authorId = myFriendsPosts[i].idUser;
-              const author = usersData.find((user) => user.id === authorId);
-        
-              if (author) {
-                // Asignar la URL del perfil al post
-                myFriendsPosts[i].urlProfile = author.urlProfile;
-              } else {
-                // Si el usuario que hizo la publicación no está en usersData, obtener la URL del perfil de la base de datos
-                const authorDoc = await User.doc(authorId).get();
-                const authorData = {
-                  name: authorDoc._fieldsProto.name.stringValue,
-                  lastname: authorDoc._fieldsProto.lastname.stringValue,
-                  mail: authorDoc._fieldsProto.mail.stringValue,
-                  date: authorDoc._fieldsProto.date.stringValue,
-                  time: authorDoc._fieldsProto.time.stringValue,
-                  password: authorDoc._fieldsProto.password.stringValue,
-                  urlProfile: authorDoc._fieldsProto.urlProfile.stringValue,
-                  id: authorDoc._ref._path.segments[1],
+            const posts = await Post.get();
+            const userData = await User.get();
+            
+            const postsData = posts.docs.map((doc) => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    idUser: data.idUser,
+                    content: data.content || data.publicacion || '',
+                    urlImage: data.urlImage || '',
+                    date: data.date || today.toLocaleDateString(),
+                    time: data.time || today.toLocaleTimeString(),
+                    likes: data.likes || data.usersLinked || [],
+                    comments: data.comments || data.usersComments || [],
+                    name: data.name || '',
+                    lastname: data.lastname || '',
+                    type: data.type || 'text',
+                    photos: data.photos || []
                 };
-        
-                // Asignar la URL del perfil al post
-                myFriendsPosts[i].urlProfile = authorData.urlProfile;
-              }
-            }
-        
-            const myPosts = allPosts.filter((post) => post.idUser === idUser);
-        
+            });
+
+            const userDataMap = userData.docs.reduce((acc, doc) => {
+                const data = doc.data();
+                acc[doc.id] = {
+                    name: data.name || '',
+                    lastname: data.lastname || '',
+                    urlProfile: data.urlProfile || ''
+                };
+                return acc;
+            }, {});
+
+            const postsWithUserData = postsData.map(post => ({
+                ...post,
+                user: userDataMap[post.idUser] || {
+                    name: 'Usuario',
+                    lastname: 'Desconocido',
+                    urlProfile: ''
+                }
+            }));
+
             res.status(200).json({
-              status: true,
-              message: "Publicaciones recuperadas exitosamente",
-              misPublicaciones: myPosts,
-              publicacionesAmigos: myFriendsPosts,
+                status: true,
+                message: "Posts obtenidos exitosamente",
+                posts: postsWithUserData
             });
-          } catch (error) {
-            console.error(error);
+        } catch (error) {
+            console.error('Error getting posts:', error);
             res.status(400).json({
-              status: false,
-              message: "No se han podido recuperar las publicaciones",
+                status: false,
+                message: "No se han podido recuperar los posts"
             });
-          }
+        }
     },
     addPosts: async(req,res) => {
         const {name,lastname,idUser}=req.params
@@ -219,5 +131,52 @@ let time = today.toLocaleTimeString()
             })
         }
         
+    },
+    allPosts: async (req, res) => {
+        try {
+            const userId = req.user.id;
+            
+            // Obtener amigos del usuario
+            const friendships = await RelationShip
+                .where('senderId', '==', userId)
+                .where('status', '==', 'accepted')
+                .get();
+
+            const friendIds = friendships.docs.map(doc => doc.data().receiverId);
+            
+            // Obtener posts del usuario y sus amigos
+            const postsQuery = await Post
+                .where('idUser', 'in', [userId, ...friendIds])
+                .orderBy('timestamp', 'desc')
+                .get();
+
+            const posts = await Promise.all(postsQuery.docs.map(async (doc) => {
+                const postData = doc.data();
+                const userDoc = await User.doc(postData.idUser).get();
+                const userData = userDoc.data();
+
+                return {
+                    ...postData,
+                    idPublicacion: doc.id,
+                    user: {
+                        name: userData.name,
+                        lastname: userData.lastname,
+                        urlProfile: userData.urlProfile
+                    }
+                };
+            }));
+
+            res.status(200).json({
+                status: true,
+                message: "Posts obtenidos exitosamente",
+                posts
+            });
+        } catch (error) {
+            console.error('Error getting posts:', error);
+            res.status(500).json({
+                status: false,
+                message: "Error al obtener los posts"
+            });
+        }
     }
 }

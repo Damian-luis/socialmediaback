@@ -1,6 +1,8 @@
 const {RelationShip} = require('../config/db');
 const {User,Post} = require('../config/db');
 const { v4: uuidv4 } = require('uuid');
+const admin = require('firebase-admin');
+const db = admin.firestore();
 let today = new Date();
 module.exports={
     react:async(req,res)=>{
@@ -42,6 +44,21 @@ module.exports={
           else{
             newReact.push({name:name,lastname:lastname,idLike:idUserLiked,idUser:idUserLiked})
            await Post.doc(idPublicacion).update({usersLinked:newReact})
+
+            // Crear notificación para el dueño del post cuando se da like
+            const postOwnerId = publicacion[0].idUser;
+            if (postOwnerId !== idUserLiked) { // No crear notificación si el usuario da like a su propio post
+                const notificationRef = db.collection('notifications').doc();
+                await notificationRef.set({
+                    userId: postOwnerId,
+                    type: 'like',
+                    senderId: idUserLiked,
+                    postId: idPublicacion,
+                    timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                    read: false
+                });
+            }
+
             res.status(200).json({ 
                 status:true,
                 message:"Has reaccionado a esta publicacion",
@@ -64,16 +81,13 @@ module.exports={
     },
     postComment: async(req,res) => {
         const {idFriend,idPublicacion,name,lastname}=req.params
-        
         const comment=req.body.comment
         console.log(comment) 
         let date = today.toLocaleDateString()
-let time = today.toLocaleTimeString() 
+        let time = today.toLocaleTimeString() 
 
         try{
             const posts=await Post.get()
-           
-            
             const publicaciones=posts.docs.map(e=>{return {
                 publicacion:e._fieldsProto.publicacion.stringValue,
                 nombre:e._fieldsProto.name.stringValue,
@@ -96,7 +110,6 @@ let time = today.toLocaleTimeString()
                     idLike:e.mapValue.fields.idLike.stringValue,
                     idUser:e.mapValue.fields.idUser.stringValue
                 }}),
-                
                 idPublicacion:e._ref._path.segments[1]
             }})
            
@@ -114,6 +127,22 @@ let time = today.toLocaleTimeString()
             })
             
             await Post.doc(idPublicacion).update({usersComments:newComment})
+
+            // Crear notificación para el dueño del post
+            const postOwnerId = publicacion[0].idUser;
+            if (postOwnerId !== idFriend) { // No crear notificación si el usuario comenta su propio post
+                const notificationRef = db.collection('notifications').doc();
+                await notificationRef.set({
+                    userId: postOwnerId,
+                    type: 'comment',
+                    senderId: idFriend,
+                    postId: idPublicacion,
+                    comment: comment,
+                    timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                    read: false
+                });
+            }
+
             res.status(200).json({
                 status:true,
                 message:"Se ha añadido tu comentario",
